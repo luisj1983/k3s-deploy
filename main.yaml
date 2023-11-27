@@ -1,5 +1,5 @@
 - name: Deploy k3s
-  hosts: rpi_cluster
+  hosts: all
   become: true
   gather_facts: true
   ignore_errors: true
@@ -25,7 +25,7 @@
         - 'python3-pip'
 
     - name: K3s-server tasks
-      when: ((inventory_hostname in groups["rpi_cluster_control_plane"][0]))
+      when: ((inventory_hostname in groups["cluster_control_plane"][0]))
       block:
 
         - name: Create k3s directory
@@ -68,12 +68,12 @@
         src: /var/lib/rancher/k3s/server/node-token
       register: k3s_join_token_encoded
       check_mode: false
-      delegate_to: "{{ groups['rpi_cluster_control_plane'][0] }}"
+      delegate_to: "{{ groups['cluster_control_plane'][0] }}"
 
     - name: K3s-agent tasks
       when:
-        - ((inventory_hostname not in groups["rpi_cluster_control_plane"][0]))
-        - ((inventory_hostname in groups["rpi_cluster"]))
+        - ((inventory_hostname not in groups["cluster_control_plane"][0]))
+        - ((inventory_hostname in groups["cluster"]))
         - ansible_facts.services["k3s-agent.service"] is not defined
         - k3s_join_token_encoded is defined
       block:
