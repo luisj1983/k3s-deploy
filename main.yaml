@@ -16,14 +16,6 @@
     - name: Populate service facts
       ansible.builtin.service_facts:
 
-    - name: Ansible Kubernetes pre-requisites (apt)
-      ansible.builtin.apt:
-        name: "{{ item }}"
-        state: present
-        update_cache: true
-      with_items:
-        - 'python3-pip'
-
     - name: K3s-server tasks
       when: ((inventory_hostname in groups["cluster_control_plane"][0]))
       block:
