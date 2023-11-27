@@ -1,0 +1,121 @@
+- name: Deploy k3s
+  hosts: rpi_cluster
+  become: true
+  gather_facts: true
+  ignore_errors: true
+  vars:
+    k3s_join_token: "{{ k3s_join_token_encoded.content | b64decode }}"
+    wait_after_install: true
+    wait_after_install_time_secs: 30
+  tasks:
+
+    - name: Set k3s_server_config fact
+      ansible.builtin.set_fact:
+        k3s_server_config: "{{ lookup('template', 'config_server.j2') }}"
+
+    - name: Populate service facts
+      ansible.builtin.service_facts:
+
+    - name: Ansible Kubernetes pre-requisites (apt)
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      with_items:
+        - 'python3-pip'
+
+    - name: K3s-server tasks
+      when: ((inventory_hostname in groups["rpi_cluster_control_plane"][0]))
+      block:
+
+        - name: Create k3s directory
+          ansible.builtin.file:
+            dest: /etc/rancher/k3s/
+            state: directory
+            mode: "0755"
+            owner: root
+
+        - name: Create k3s config (server)
+          ansible.builtin.template:
+            src: config_server.j2
+            dest: /etc/rancher/k3s/config.yaml
+            owner: root
+            group: root
+            mode: '0644'
+          register: k3s_config_file_created
+
+        - name: Install k3s - Control Plane
+          ansible.builtin.shell: >
+            set -o pipefail \
+            && curl -sfL https://get.k3s.io |
+            INSTALL_K3S_EXEC="server"
+            sh -s -
+          args:
+            executable: /usr/bin/bash
+          when:
+            - ansible_facts.services["k3s.service"] is not defined
+          register: k3s_install_control_plane
+
+        - name: Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server
+          ansible.builtin.pause:
+            seconds: "{{ wait_after_install_time_secs }}"
+          when:
+            - wait_after_install is true
+            - k3s_install_control_plane.changed is true
+
+    - name: Get k3s join token
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_join_token_encoded
+      check_mode: false
+      delegate_to: "{{ groups['rpi_cluster_control_plane'][0] }}"
+
+    - name: K3s-agent tasks
+      when:
+        - ((inventory_hostname not in groups["rpi_cluster_control_plane"][0]))
+        - ((inventory_hostname in groups["rpi_cluster"]))
+        - ansible_facts.services["k3s-agent.service"] is not defined
+        - k3s_join_token_encoded is defined
+      block:
+
+        - name: Create k3s directory
+          ansible.builtin.file:
+            dest: /etc/rancher/k3s/
+            state: directory
+            mode: "0755"
+            owner: root
+          register: k3s_config_folder_created
+
+
+        - name: Create k3s config (worker nodes)
+          ansible.builtin.template:
+            src: config_agent.j2
+            dest: /etc/rancher/k3s/config.yaml
+            owner: root
+            group: root
+            mode: '0644'
+          register: k3s_config_file_created
+
+        - name: Install k3s - Worker Nodes
+          ansible.builtin.shell: >
+            set -o pipefail \
+            && curl -sfL https://get.k3s.io |
+            INSTALL_K3S_EXEC="agent" sh -s -
+          args:
+            executable: /usr/bin/bash
+          when:
+            - k3s_join_token is defined
+          register: k3s_install_worker_nodes
+
+        - name: Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server
+          ansible.builtin.pause:
+            seconds: "{{ wait_after_install_time_secs }}"
+          when:
+            - wait_after_install is true
+            - k3s_install_worker_nodes.changed is true
+
+    - name: Import node labelling tasks
+      ansible.builtin.import_tasks: label_nodes.yml
+
+    - name: Import kube config tasks
+      ansible.builtin.import_tasks: get_kubeconfig.yml
