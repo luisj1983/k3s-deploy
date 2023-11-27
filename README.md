@@ -39,3 +39,9 @@ cluster:
   children:
     your_other_preferred_group_here:
 ```
+2. My worker nodes are not labelled/tainted with any roles.
+That's a Kubernetes issues since you cannot apply those sorts of labels at cluster creatiion-time; instead you have to do it as a post-install task. I hope to add that soon.
+
+# To-do
+- [ ] Post-install labelling of nodes
+- [ ] Generate kubeconfig on local Ansible node
