@@ -5,6 +5,8 @@ Automatically deploy a k3s Kubernetes cluster using Ansible.
 
 This is an Ansible playbook to deploy a [k3s](https://docs.k3s.io/) cluster with a single control node and multiple worker nodes.
 
+Optionally, it will create a kubeconfig file on your Ansible control node (i.e. where you are running `ansible-playbook` from) to access the cluster.
+
 It requires that you specify two Ansible Inventory groups:
 - cluster_control_plane
 - cluster
@@ -24,6 +26,9 @@ ansible-playbook -K main.yml
 This variable will wait for a number of seconds to allow time for cluster node installations to complete and fully spin up.
 ### `wait_after_install_time_secs` (integer/seconds)
 This variable provides the time in seconds that should be used when `wait_after_install` is set to true.
+### `import_kube_config` (bool: true/false)
+This enables the task to create a local kubeconfig on the Ansible control node that will allow you to access the cluster.
+`import_kube_config` is set to false by default as it will not attempt to preserve or merge any existing kubeconfig file.
 
 
 ## FAQ/Issues
@@ -40,8 +45,8 @@ cluster:
     your_other_preferred_group_here:
 ```
 2. My worker nodes are not labelled/tainted with any roles.
-That's a Kubernetes issues since you cannot apply those sorts of labels at cluster creatiion-time; instead you have to do it as a post-install task. I hope to add that soon.
+That's a Kubernetes issue since you cannot apply those sorts of labels at cluster creation-time; instead you have to do it as a post-install task. I hope to add that soon.
 
 # To-do
 - [ ] Post-install labelling of nodes
-- [ ] Generate kubeconfig on local Ansible node
+- [x] Generate kubeconfig on local Ansible node

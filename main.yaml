@@ -1,5 +1,5 @@
 - name: Deploy k3s
-  hosts: all
+  hosts: cluster
   become: true
   gather_facts: true
   ignore_errors: true
@@ -7,6 +7,8 @@
     k3s_join_token: "{{ k3s_join_token_encoded.content | b64decode }}"
     wait_after_install: true
     wait_after_install_time_secs: 30
+    import_kube_config: false
+    home: "{{ lookup('env', 'HOME') }}"
   tasks:
 
     - name: Set k3s_server_config fact
@@ -78,7 +80,6 @@
             owner: root
           register: k3s_config_folder_created
 
-
         - name: Create k3s config (worker nodes)
           ansible.builtin.template:
             src: config_agent.j2
@@ -106,8 +107,6 @@
             - wait_after_install is true
             - k3s_install_worker_nodes.changed is true
 
-    - name: Import node labelling tasks
-      ansible.builtin.import_tasks: label_nodes.yml
-
     - name: Import kube config tasks
-      ansible.builtin.import_tasks: get_kubeconfig.yml
+      ansible.builtin.import_tasks: tasks/import_kubeconfig.yml
+      when: import_kube_config
