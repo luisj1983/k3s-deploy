@@ -15,6 +15,8 @@ The Playbook will select the _first_ inventory item in the `cluster_control_plan
 
 The playbook also optionally imports a task which will create a kubeconfig file on your Ansible control node (where you are executing the playbook) allowing you to access the cluster using `kubectl` etc.
 
+Optionally, the playbook will now label your worker-plane nodes with the node label and or any labels you wish.
+
 ## Usage
 
 ```bash
@@ -29,6 +31,11 @@ This variable provides the time in seconds that should be used when `wait_after_
 ### `import_kube_config` (bool: true/false)
 This enables the task to create a local kubeconfig on the Ansible control node that will allow you to access the cluster.
 `import_kube_config` is set to false by default as it will not attempt to preserve or merge any existing kubeconfig file.
+### `label_nodes` (bool: true/false)
+This will invoke the task in `tasks/label_nodes.yml` which will apply Kubernetes labels tom your `cluster` inventory group (i.e. the worker/data-plane). By default it applies the "node" label but examples are commented out to show how to apply other labels.
+By default this is set to false.
+
+Please note that there is an alternate version of this task file which utlisizes bash commands leveraging kubectl rather than the OpenShift modules. This is provided as-is in case you can't use the OpenShift modules. Be aware that it is not idempotent.
 
 
 ## FAQ/Issues
@@ -44,9 +51,9 @@ cluster:
   children:
     your_other_preferred_group_here:
 ```
-2. My worker nodes are not labelled/tainted with any roles.
-That's a Kubernetes issue since you cannot apply those sorts of labels at cluster creation-time; instead you have to do it as a post-install task. I hope to add that soon.
+2. ~~My worker nodes are not labelled/tainted with any roles.
+That's a Kubernetes issue since you cannot apply those sorts of labels at cluster creation-time; instead you have to do it as a post-install task. I hope to add that soon.~~
 
 # To-do
-- [ ] Post-install labelling of nodes
+- [x] Post-install labelling of nodes
 - [x] Generate kubeconfig on local Ansible node

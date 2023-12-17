@@ -1,0 +1,20 @@
+- name: Label worker nodes
+  when: ((inventory_hostname in groups["cluster"]))
+  block:
+    - name: Set Control Plane node-labels
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiversion: v1
+          kind: node
+          metadata:
+            name: "{{ item }}"
+            labels:
+              node-role.kubernetes.io/node: "node"
+              # node-role.kubernetes.io/control-plane: "true"
+              # node-role.kubernetes.io/master: "true"
+              # node-role.kubernetes.io/etcd: "true"
+      with_items:
+        - "{{ groups['cluster'] }}"
+      register: control_plane_labelled
+      delegate_to: 127.0.0.1

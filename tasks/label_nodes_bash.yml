@@ -1,0 +1,29 @@
+- name: Label worker nodes
+  hosts: cluster_control_plane
+  become: false
+  gather_facts: false
+  ignore_errors: true
+  tasks:
+
+    - name: Ansible Kubernetes pre-requisites (apt)
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      with_items:
+        - 'python3-pip'
+
+    - name: Install k3s-server pre-requisites
+      ansible.builtin.pip:
+        name:
+          - openshift
+          - pyyaml
+          - kubernetes
+
+    - name: Label nodes
+      ansible.builtin.shell: >
+        kubectl label node {{ item }} node-role.kubernetes.io/node=node
+      args:
+        executable: /usr/bin/bash
+      with_items: "{{ groups['cluster'] }}"
+      delegate_to: "{{ groups['cluster_control_plane'][0] }}"

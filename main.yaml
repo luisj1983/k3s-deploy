@@ -8,6 +8,7 @@
     wait_after_install: true
     wait_after_install_time_secs: 30
     import_kube_config: false
+    label_nodes: false
     home: "{{ lookup('env', 'HOME') }}"
   tasks:
 
@@ -110,3 +111,7 @@
     - name: Import kube config tasks
       ansible.builtin.import_tasks: tasks/import_kubeconfig.yml
       when: import_kube_config
+
+    - name: Label worker nodes
+      ansible.builtin.import_tasks: tasks/label_nodes.yml
+      when: label_nodes
