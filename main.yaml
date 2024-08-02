@@ -20,7 +20,7 @@
       ansible.builtin.service_facts:
 
     - name: K3s-server tasks
-      when: ((inventory_hostname in groups["cluster_control_plane"][0]))
+      when: ((inventory_hostname in groups["cluster_control_plane"]))
       block:
 
         - name: Create k3s directory
@@ -30,7 +30,7 @@
             mode: "0755"
             owner: root
 
-        - name: Create k3s config (server)
+        - name: "Create k3s config (server)"
           ansible.builtin.template:
             src: config_server.j2
             dest: /etc/rancher/k3s/config.yaml
@@ -38,8 +38,9 @@
             group: root
             mode: '0644'
           register: k3s_config_file_created
+          when: ((inventory_hostname in groups["cluster_control_plane"][0]))
 
-        - name: Install k3s - Control Plane
+        - name: "Install k3s - Control Plane"
           ansible.builtin.shell: >
             set -o pipefail \
             && curl -sfL https://get.k3s.io |
@@ -51,7 +52,7 @@
             - ansible_facts.services["k3s.service"] is not defined
           register: k3s_install_control_plane
 
-        - name: Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server
+        - name: 'Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server'
           ansible.builtin.pause:
             seconds: "{{ wait_after_install_time_secs }}"
           when:
@@ -81,7 +82,7 @@
             owner: root
           register: k3s_config_folder_created
 
-        - name: Create k3s config (worker nodes)
+        - name: "Create k3s config (worker nodes)"
           ansible.builtin.template:
             src: config_agent.j2
             dest: /etc/rancher/k3s/config.yaml
@@ -90,7 +91,7 @@
             mode: '0644'
           register: k3s_config_file_created
 
-        - name: Install k3s - Worker Nodes
+        - name: "Install k3s - Worker Nodes"
           ansible.builtin.shell: >
             set -o pipefail \
             && curl -sfL https://get.k3s.io |
@@ -99,9 +100,10 @@
             executable: /usr/bin/bash
           when:
             - k3s_join_token is defined
+            - ansible_facts.services["k3s-agent.service"] is not defined
           register: k3s_install_worker_nodes
 
-        - name: Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server
+        - name: 'Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server'
           ansible.builtin.pause:
             seconds: "{{ wait_after_install_time_secs }}"
           when:
