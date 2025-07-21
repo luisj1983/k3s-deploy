@@ -1,5 +1,5 @@
 [cluster]
-node[1:4] ansible_python_interpreter=/usr/bin/python3
+pinode[1:4] ansible_python_interpreter=/usr/bin/python3
 
 [cluster_control_plane]
-node1
+pinode1
