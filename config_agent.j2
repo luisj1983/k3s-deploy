@@ -1,5 +1,5 @@
 kubelet-arg:
   - container-log-max-files=4
   - container-log-max-size=50Mi
-server: https://{{ groups['cluster_control_plane'].0 }}.lan:6443
+server: https://{{ hostvars[groups['cluster_control_plane'][0]].ansible_host | default(groups['cluster_control_plane'][0]) }}:6443
 token: {{ k3s_join_token }}
