@@ -19,7 +19,7 @@
       ansible.builtin.service_facts:
 
     - name: K3s-server tasks
-      when: ((inventory_hostname in groups["cluster_control_plane"]))
+      when: inventory_hostname == groups["cluster_control_plane"][0]
       block:
 
         - name: Create k3s directory
@@ -37,7 +37,6 @@
             group: root
             mode: '0644'
           register: k3s_config_file_created
-          when: ((inventory_hostname == groups["cluster_control_plane"][0]))
 
         - name: "Install k3s - Control Plane"
           ansible.builtin.shell: >
