@@ -2,7 +2,6 @@
   hosts: cluster
   become: true
   gather_facts: true
-  ignore_errors: true
   vars:
     k3s_join_token: "{{ k3s_join_token_encoded.content | b64decode }}"
     wait_after_install: true
