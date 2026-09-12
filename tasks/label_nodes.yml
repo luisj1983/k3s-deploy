@@ -1,12 +1,12 @@
 - name: Label worker nodes
   when: ((inventory_hostname in groups["cluster"]))
   block:
-    - name: Set Control Plane node-labels
+    - name: Set worker node labels
       kubernetes.core.k8s:
         state: present
         definition:
           apiVersion: v1
-          kind: node
+          kind: Node
           metadata:
             name: "{{ item }}"
             labels:
