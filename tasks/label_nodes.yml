@@ -15,7 +15,7 @@
               # node-role.kubernetes.io/master: "true"
               # node-role.kubernetes.io/etcd: "true"
       with_items:
-        - "{{ groups['cluster'] }}"
+        - "{{ groups['cluster'] | difference(groups['cluster_control_plane']) }}"
       register: control_plane_labelled
       delegate_to: 127.0.0.1
       run_once: true
