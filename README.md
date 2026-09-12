@@ -35,9 +35,6 @@ This enables the task to create a local kubeconfig on the Ansible control node t
 This will invoke the task in `tasks/label_nodes.yml` which will apply Kubernetes labels to your `cluster` inventory group (i.e. the worker/data-plane). By default it applies the "node" label but examples are commented out to show how to apply other labels.
 By default this is set to false.
 
-Please note that there is an alternate version of this task file which utilizes bash commands leveraging kubectl rather than the `kubernetes.core.k8s` Ansible module. This is provided as-is in case you can't use the `kubernetes.core.k8s` Ansible module. Be aware that it is not idempotent.
-
-
 ## FAQ/Issues
 1. I don't want to use the provided Ansible Inventory group names.<br>
 
