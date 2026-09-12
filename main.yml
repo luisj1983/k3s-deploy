@@ -111,6 +111,7 @@
     - name: Import kube config tasks
       ansible.builtin.import_tasks: tasks/import_kubeconfig.yml
       when: import_kube_config
+      run_once: true
 
     - name: Label worker nodes
       ansible.builtin.import_tasks: tasks/label_nodes.yml
