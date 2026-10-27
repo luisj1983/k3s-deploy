@@ -3,6 +3,10 @@
   become: true
   gather_facts: true
   vars:
+    k3s_api_endpoint_resolved: >-
+      {{ k3s_api_endpoint | default(
+        hostvars[groups['cluster_control_plane'][0]].ansible_host
+        | default(groups['cluster_control_plane'][0])) }}
     k3s_join_token: "{{ k3s_join_token_encoded.content | b64decode }}"
     wait_after_install: true
     wait_after_install_time_secs: 30

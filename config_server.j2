@@ -3,6 +3,8 @@
   - "traefik"
   - "servicelb" #}
 write-kubeconfig-mode: "0600"
+tls-san:
+  - {{ k3s_api_endpoint_resolved | to_json }}
 cluster-cidr: 10.244.0.0/16
 kubelet-arg:
   - container-log-max-files=4

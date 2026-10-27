@@ -32,6 +32,23 @@ ansible-playbook -K main.yml
 ```
 
 ## Variables
+### `k3s_api_endpoint` (optional hostname or IPv4 address)
+Sets the API address used by agents and the exported kubeconfig. Specify only the
+hostname or IPv4 address, without `https://` or a port; the playbook uses port 6443.
+When omitted, the playbook uses the first control-plane host's `ansible_host`,
+falling back to its inventory name. The resolved address is also added to the
+server certificate's `tls-san` list.
+
+Set this variable for the whole cluster (for example in `group_vars/all.yml`) so
+the server and agents use the same endpoint:
+
+```yaml
+k3s_api_endpoint: k3s.example.com
+```
+
+The address must resolve and be reachable from both agents and your Ansible
+control node. Configuration changes restart existing K3s services on the next run.
+
 ### `wait_after_install` (bool: true/false)
 This variable will wait for a number of seconds to allow time for cluster node installations to complete and fully spin up.
 ### `wait_after_install_time_secs` (integer/seconds)
