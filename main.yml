@@ -37,6 +37,7 @@
             group: root
             mode: '0644'
           register: k3s_config_file_created
+          notify: Restart k3s server
 
         - name: "Install k3s - Control Plane"
           ansible.builtin.shell: >
@@ -57,6 +58,9 @@
             - wait_after_install is true
             - k3s_install_control_plane.changed is true
 
+    - name: Apply server configuration changes
+      ansible.builtin.meta: flush_handlers
+
     - name: Get k3s join token
       ansible.builtin.slurp:
         src: /var/lib/rancher/k3s/server/node-token
@@ -68,7 +72,6 @@
       when:
         - ((inventory_hostname != groups["cluster_control_plane"][0]))
         - ((inventory_hostname in groups["cluster"]))
-        - ansible_facts.services["k3s-agent.service"] is not defined
         - k3s_join_token_encoded is defined
       block:
 
@@ -88,6 +91,7 @@
             group: root
             mode: '0600'
           register: k3s_config_file_created
+          notify: Restart k3s agent
 
         - name: "Install k3s - Worker Nodes"
           ansible.builtin.shell: >
@@ -108,6 +112,9 @@
             - wait_after_install is true
             - k3s_install_worker_nodes.changed is true
 
+    - name: Apply agent configuration changes
+      ansible.builtin.meta: flush_handlers
+
     - name: Import kube config tasks
       ansible.builtin.import_tasks: tasks/import_kubeconfig.yml
       when: import_kube_config
@@ -116,3 +123,16 @@
     - name: Label worker nodes
       ansible.builtin.import_tasks: tasks/label_nodes.yml
       when: label_nodes
+
+  handlers:
+    - name: Restart k3s server
+      ansible.builtin.service:
+        name: k3s
+        state: restarted
+      when: ansible_facts.services["k3s.service"] is defined
+
+    - name: Restart k3s agent
+      ansible.builtin.service:
+        name: k3s-agent
+        state: restarted
+      when: ansible_facts.services["k3s-agent.service"] is defined
