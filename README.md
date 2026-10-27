@@ -19,6 +19,14 @@ Optionally, the playbook will now label your worker/data-plane nodes with the no
 
 ## Usage
 
+Install the required Ansible collection:
+
+```bash
+ansible-galaxy collection install -r requirements.yml
+```
+
+Run the playbook:
+
 ```bash
 ansible-playbook -K main.yml
 ```
