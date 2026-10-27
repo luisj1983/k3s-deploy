@@ -25,6 +25,18 @@ Install the required Ansible collection:
 ansible-galaxy collection install -r requirements.yml
 ```
 
+For optional node labeling, also install the Python dependencies on the machine
+running Ansible, using the Python interpreter used by local delegated tasks
+(in the supplied devcontainer, `/usr/bin/python3`):
+
+```bash
+/usr/bin/python3 -m pip install --user -r requirements.txt
+```
+
+The Ansible collection and its Python dependencies are separate installations.
+For a virtual environment, install with that environment's Python without
+`--user` and configure localhost's `ansible_python_interpreter` to use it.
+
 Run the playbook:
 
 ```bash
