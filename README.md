@@ -31,6 +31,13 @@ Run the playbook:
 ansible-playbook -K main.yml
 ```
 
+For a pre-deployment check, add `--check`. This validates inventory, the labeling
+dependency, and server/agent template rendering using a placeholder join token.
+It gathers host facts but skips installation, configuration writes,
+service changes, credential reads, kubeconfig import, and labeling. It does not
+verify successful installation, API access, or node registration. Hosts must still
+be reachable and allow the configured privilege escalation for fact gathering.
+
 ## Variables
 ### `k3s_api_endpoint` (optional hostname or IPv4 address)
 Sets the API address used by agents and the exported kubeconfig. Specify only the

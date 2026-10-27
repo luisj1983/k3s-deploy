@@ -15,21 +15,45 @@
     home: "{{ lookup('env', 'HOME') }}"
   tasks:
 
+    - name: Validate deployment inventory
+      ansible.builtin.assert:
+        that:
+          - groups['cluster_control_plane'] | default([]) | length > 0
+          - (groups['cluster_control_plane'] | default([]) | first) in groups['cluster']
+        fail_msg: The first cluster_control_plane host must also belong to the cluster group.
+
     - name: Validate labeling prerequisites
       ansible.builtin.assert:
         that:
           - not (label_nodes | bool) or (import_kube_config | bool)
         fail_msg: Enable import_kube_config when label_nodes is enabled so labeling uses the deployed cluster's kubeconfig.
 
-    - name: Set k3s_server_config fact
-      ansible.builtin.set_fact:
-        k3s_server_config: "{{ lookup('template', 'config_server.j2') }}"
+    - name: Validate rendered configuration in check mode
+      ansible.builtin.assert:
+        that:
+          - lookup('template', 'config_server.j2') | from_yaml is mapping
+          - lookup('template', 'config_agent.j2') | from_yaml is mapping
+        success_msg: Server and agent configuration templates render successfully using a placeholder join token.
+      vars:
+        k3s_join_token: check-mode-placeholder
+      when: ansible_check_mode
+
+    - name: Explain check mode scope
+      ansible.builtin.debug:
+        msg: >-
+          Check mode validates inventory, labeling prerequisites, and configuration
+          rendering. Installation, configuration writes, service changes, credential
+          reads, kubeconfig import, and labeling are skipped because they depend on
+          deployment outputs. No live Kubernetes API validation is performed.
+      when: ansible_check_mode
 
     - name: Populate service facts
       ansible.builtin.service_facts:
 
     - name: K3s-server tasks
-      when: inventory_hostname == groups["cluster_control_plane"][0]
+      when:
+        - not ansible_check_mode
+        - inventory_hostname == groups["cluster_control_plane"][0]
       block:
 
         - name: Create k3s directory
@@ -81,11 +105,12 @@
       ansible.builtin.slurp:
         src: /var/lib/rancher/k3s/server/node-token
       register: k3s_join_token_encoded
-      check_mode: false
+      when: not ansible_check_mode
       delegate_to: "{{ groups['cluster_control_plane'][0] }}"
 
     - name: K3s-agent tasks
       when:
+        - not ansible_check_mode
         - ((inventory_hostname != groups["cluster_control_plane"][0]))
         - ((inventory_hostname in groups["cluster"]))
         - k3s_join_token_encoded is defined
@@ -139,12 +164,16 @@
 
     - name: Import kube config tasks
       ansible.builtin.import_tasks: tasks/import_kubeconfig.yml
-      when: import_kube_config
+      when:
+        - not ansible_check_mode
+        - import_kube_config
       run_once: true
 
     - name: Label worker nodes
       ansible.builtin.import_tasks: tasks/label_nodes.yml
-      when: label_nodes
+      when:
+        - not ansible_check_mode
+        - label_nodes
 
   handlers:
     - name: Restart k3s server
