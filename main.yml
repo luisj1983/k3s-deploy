@@ -51,6 +51,12 @@
             - ansible_facts.services["k3s.service"] is not defined
           register: k3s_install_control_plane
 
+        - name: Enable and start k3s server
+          ansible.builtin.service:
+            name: k3s
+            enabled: true
+            state: started
+
         - name: 'Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server'
           ansible.builtin.pause:
             seconds: "{{ wait_after_install_time_secs }}"
@@ -104,6 +110,12 @@
             - k3s_join_token is defined
             - ansible_facts.services["k3s-agent.service"] is not defined
           register: k3s_install_worker_nodes
+
+        - name: Enable and start k3s agent
+          ansible.builtin.service:
+            name: k3s-agent
+            enabled: true
+            state: started
 
         - name: 'Pause for "{{ wait_after_install_time_secs }}" seconds to spin up k3s server'
           ansible.builtin.pause:
