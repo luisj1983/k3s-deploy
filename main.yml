@@ -86,7 +86,7 @@
             dest: /etc/rancher/k3s/config.yaml
             owner: root
             group: root
-            mode: '0644'
+            mode: '0600'
           register: k3s_config_file_created
 
         - name: "Install k3s - Worker Nodes"
