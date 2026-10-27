@@ -59,6 +59,9 @@ This enables the task to create a local kubeconfig on the Ansible control node t
 ### `label_nodes` (bool: true/false)
 This will invoke the task in `tasks/label_nodes.yml` which will apply Kubernetes labels to your `cluster` inventory group (i.e. the worker/data-plane). By default it applies the "node" label but examples are commented out to show how to apply other labels.
 By default this is set to false.
+Labeling requires `import_kube_config: true`. The playbook validates this before
+deployment and uses the kubeconfig imported by the earlier stage at
+`~/.kube/config`, running the local labeling task without privilege escalation.
 
 ## FAQ/Issues
 1. I don't want to use the provided Ansible Inventory group names.<br>

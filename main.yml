@@ -15,6 +15,12 @@
     home: "{{ lookup('env', 'HOME') }}"
   tasks:
 
+    - name: Validate labeling prerequisites
+      ansible.builtin.assert:
+        that:
+          - not (label_nodes | bool) or (import_kube_config | bool)
+        fail_msg: Enable import_kube_config when label_nodes is enabled so labeling uses the deployed cluster's kubeconfig.
+
     - name: Set k3s_server_config fact
       ansible.builtin.set_fact:
         k3s_server_config: "{{ lookup('template', 'config_server.j2') }}"

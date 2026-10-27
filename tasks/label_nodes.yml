@@ -2,7 +2,9 @@
   when: ((inventory_hostname in groups["cluster"]))
   block:
     - name: Set worker node labels
+      become: false
       kubernetes.core.k8s:
+        kubeconfig: "{{ home }}/.kube/config"
         state: present
         definition:
           apiVersion: v1
