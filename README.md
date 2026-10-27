@@ -28,7 +28,7 @@ ansible-galaxy collection install -r requirements.yml
 Run the playbook:
 
 ```bash
-ansible-playbook -K main.yml
+ansible-playbook -K main.yml --inventory=hosts
 ```
 
 For a pre-deployment check, add `--check`. This validates inventory, the labeling
